@@ -50,7 +50,6 @@ static BOOL waitingForAccess = NO;
 @property (nonatomic, retain) DEFacebookGradientView *gradientView;
 @property (nonatomic, retain) UIPickerView *accountPickerView;
 @property (nonatomic, retain) UIPopoverController *accountPickerPopoverController;
-@property (retain, nonatomic) NSString *urlSchemeSuffix;
 
 
 - (void)facebookComposeViewControllerInit;
@@ -114,19 +113,12 @@ enum {
 #pragma mark - Setup & Teardown
 
 
-
-
 - (id)init
 {
     return [self initForceUseCustomController:NO];
 }
 
 - (id)initForceUseCustomController:(BOOL)custom
-{
-    return [self initForceUseCustomController:custom urlSchemeSuffix:nil];
-}
-
-- (id)initForceUseCustomController:(BOOL)custom urlSchemeSuffix:(NSString *)urlSchemeSuffix
 {
     if (!custom && [[UIDevice currentDevice].systemVersion floatValue] >= 6) {
         self = [(DEFacebookComposeViewController*)[SLComposeViewController composeViewControllerForServiceType:SLServiceTypeFacebook] retain];
@@ -136,7 +128,6 @@ enum {
     self = [super init];
     if (self) {
         [self facebookComposeViewControllerInit];
-        self.urlSchemeSuffix = urlSchemeSuffix;
     }
     return self;
 }
@@ -202,7 +193,7 @@ enum {
     [_accountPickerView release], _accountPickerView = nil;
     [_accountPickerPopoverController release], _accountPickerPopoverController = nil;
     
-//    NSLog(@"DEALLOC DEFacebookComposeViewController");
+    NSLog(@"DEALLOC DEFacebookComposeViewController");
     
     [super dealloc];
 }
@@ -302,9 +293,25 @@ enum {
 {
     [super viewDidAppear:animated];
     
+    // grab an image of our parent view
+    UIView *parentView = self.fromViewController.view;
+    
+    // For iOS 5 you need to use presentingViewController:
+    // UIView *parentView = self.presentingViewController.view;
+    
+    UIGraphicsBeginImageContext(parentView.bounds.size);
+    [parentView.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *parentViewImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    // insert an image view with a picture of the parent view at the back of our view's subview stack...
+    self.backgroundImageView = [[UIImageView alloc] initWithFrame:self.view.bounds];
+    self.backgroundImageView.image = parentViewImage;
+    [self.view insertSubview:self.backgroundImageView atIndex:0];
+    
     self.backgroundImageView.alpha = 1.0f;
     //self.backgroundImageView.frame = [self.view convertRect:self.backgroundImageView.frame fromView:[UIApplication sharedApplication].keyWindow];
-    [self.view insertSubview:self.gradientView aboveSubview:self.backgroundImageView];
+    //[self.view insertSubview:self.gradientView aboveSubview:self.backgroundImageView];
     
     CAShapeLayer *maskLayer = [CAShapeLayer layer];
     UIBezierPath *roundedPath = [UIBezierPath bezierPathWithRoundedRect:self.navImage.bounds
@@ -468,7 +475,7 @@ enum {
 }
 
 
-- (BOOL)addURL:(NSURL *)url
+- (BOOL)addURL:(NSString *)url
 {
     [self.urls removeAllObjects];
     if (url == nil) {
@@ -653,22 +660,21 @@ enum {
     
     if (![FBSession.activeSession isOpen]) {
         
-        FBSession *session = [[FBSession alloc] initWithAppID:nil
-                                                  permissions:[NSArray arrayWithObjects:@"publish_stream", nil]
-                                              urlSchemeSuffix:self.urlSchemeSuffix
-                                           tokenCacheStrategy:nil];
-        
-        [FBSession setActiveSession:session];
-        [session openWithCompletionHandler:
-         ^(FBSession *session, FBSessionState state, NSError *error) {
-             if (error) {
-//                 NSLog(@"Connection error: %@ - %@", error.localizedDescription, error.userInfo);
-             } else {
-                 [FBSession setActiveSession:session];
-                 [self setSendButtonTitle:NSLocalizedString(@"Post",@"")];
-             }
-         }];
-        [session release];
+        [FBSession openActiveSessionWithPublishPermissions:[NSArray arrayWithObjects:@"publish_stream", nil]
+                                           defaultAudience:FBSessionDefaultAudienceEveryone
+                                              allowLoginUI:YES
+
+                                  completionHandler:^(FBSession *session,
+                                                      FBSessionState status,
+                                                      NSError *error) {
+                                      
+                                      if (error) {
+                                          NSLog(@"error");
+                                      } else {
+                                          [FBSession setActiveSession:session];
+                                          [self setSendButtonTitle:NSLocalizedString(@"Post",@"")];
+                                      }
+                                  }];
         
         return;
     }
@@ -686,7 +692,7 @@ enum {
     
     NSMutableDictionary *d = nil;
     if ( [self.urls count] > 0 && [self.images count] > 0 ) {
-        d = [NSMutableDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@\n%@",self.textView.text,[[self.urls lastObject] absoluteString]]
+        d = [NSMutableDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@\n%@",self.textView.text,[self.urls lastObject]]
                                                forKey:@"message"];
     } else {
         d = [NSMutableDictionary dictionaryWithObject:self.textView.text
@@ -698,7 +704,7 @@ enum {
     
     
     if ([self.urls count] > 0) {
-        [d setObject:[[self.urls lastObject] absoluteString] forKey:@"link"];
+        [d setObject:[self.urls lastObject] forKey:@"link"];
     }
     
     if ([self.images count] > 0) {
@@ -720,7 +726,7 @@ enum {
     [newConnection addRequest:request completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
         if (error)
         {
-//            NSLog(@"    error");
+            NSLog(@"    error");
             
             // remove activity
             [[[self.sendButton subviews] lastObject] removeFromSuperview];
@@ -757,7 +763,7 @@ enum {
                 [self dismissModalViewControllerAnimated:YES];
             }
 
-//            NSLog(@"   ok");
+            NSLog(@"   ok");
         };
     }];
     

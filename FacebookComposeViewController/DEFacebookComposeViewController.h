@@ -87,7 +87,7 @@ typedef void (^DEFacebookComposeViewControllerCompletionHandler)(DEFacebookCompo
     // Adds a URL to the tweet. Returns NO if the additional URL will not fit
     // within the character space currently available, or if the sheet has already
     // been presented to the user.
-- (BOOL)addURL:(NSURL *)url;
+- (BOOL)addURL:(NSString *)url;
 
 //    // Removes all URLs from the tweet. Returns NO and does not perform an operation
 //    // if the sheet has already been presented to the user.
@@ -101,8 +101,5 @@ typedef void (^DEFacebookComposeViewControllerCompletionHandler)(DEFacebookCompo
 
     // Force use SLComposeViewController on iOS 6 or not
 - (id)initForceUseCustomController:(BOOL)custom;
-
-// Adds url scheme suffix for DEFacebookComposeViewController (ignored for SLComposeViewController)
-- (id)initForceUseCustomController:(BOOL)custom urlSchemeSuffix:(NSString *)urlSchemeSuffix;
 
 @end
