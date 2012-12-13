@@ -267,6 +267,22 @@ enum {
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+    
+    // grab an image of our parent view
+    UIView *parentView = self.fromViewController.view;
+    
+    // For iOS 5 you need to use presentingViewController:
+    // UIView *parentView = self.presentingViewController.view;
+    
+    UIGraphicsBeginImageContext(parentView.bounds.size);
+    [parentView.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *parentViewImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    // insert an image view with a picture of the parent view at the back of our view's subview stack...
+    self.backgroundImageView = [[[UIImageView alloc] initWithFrame:self.view.bounds] autorelease];
+    self.backgroundImageView.image = parentViewImage;
+    [self.view insertSubview:self.backgroundImageView atIndex:0];
 
     
         // Now let's fade in a gradient view over the presenting view.
@@ -293,25 +309,9 @@ enum {
 {
     [super viewDidAppear:animated];
     
-    // grab an image of our parent view
-    UIView *parentView = self.fromViewController.view;
-    
-    // For iOS 5 you need to use presentingViewController:
-    // UIView *parentView = self.presentingViewController.view;
-    
-    UIGraphicsBeginImageContext(parentView.bounds.size);
-    [parentView.layer renderInContext:UIGraphicsGetCurrentContext()];
-    UIImage *parentViewImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    // insert an image view with a picture of the parent view at the back of our view's subview stack...
-    self.backgroundImageView = [[UIImageView alloc] initWithFrame:self.view.bounds];
-    self.backgroundImageView.image = parentViewImage;
-    [self.view insertSubview:self.backgroundImageView atIndex:0];
-    
     self.backgroundImageView.alpha = 1.0f;
     //self.backgroundImageView.frame = [self.view convertRect:self.backgroundImageView.frame fromView:[UIApplication sharedApplication].keyWindow];
-    //[self.view insertSubview:self.gradientView aboveSubview:self.backgroundImageView];
+    [self.view insertSubview:self.gradientView aboveSubview:self.backgroundImageView];
     
     CAShapeLayer *maskLayer = [CAShapeLayer layer];
     UIBezierPath *roundedPath = [UIBezierPath bezierPathWithRoundedRect:self.navImage.bounds
