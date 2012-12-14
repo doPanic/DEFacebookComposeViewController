@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.author       = "Sakrist"
   s.source       = { :git => "https://github.com/doPanic/DEFacebookComposeViewController",
                      :tag => "1.0.3" }
-  s.platform     = :ios
+  s.platform     = :ios, '5.0'
 
   s.source_files = 'FacebookComposeViewController'
   s.public_header_files = 'DEFacebookComposeViewController/*.h'
@@ -21,4 +21,5 @@ Pod::Spec.new do |s|
 
   s.frameworks = 'Accounts'
   s.dependency 'Facebook-iOS-SDK', '~> 3.1'
+  s.dependency 'MJPopupViewController', '~> 1.0'
 end
