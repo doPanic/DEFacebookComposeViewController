@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "DEFacebookComposeViewController"
-  s.version      = "1.0.1"
+  s.version      = "1.0.3"
   s.summary      = "The iOS 4 compatible Facebook Sheet."
   s.description  = <<-DESC
                       Facebook compose sheet view controller like in iOS 6.0.
@@ -9,8 +9,8 @@ Pod::Spec.new do |s|
 
   s.license      = 'Public Domain'
   s.author       = "Sakrist"
-  s.source       = { :git => "https://github.com/doPanic/FacebookSample.git",
-                     :tag => "1.0.1" }
+  s.source       = { :git => "https://github.com/doPanic/DEFacebookComposeViewController",
+                     :tag => "1.0.3" }
   s.platform     = :ios
 
   s.source_files = 'FacebookComposeViewController'

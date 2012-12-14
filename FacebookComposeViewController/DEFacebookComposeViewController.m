@@ -31,6 +31,7 @@
 #import "UIDevice+DEFacebookComposeViewController.h"
 #import <QuartzCore/QuartzCore.h>
 #import <FacebookSDK/FacebookSDK.h>
+#import "UIViewController+MJPopupViewController.h"
 
 #import <Social/Social.h>
 
@@ -46,8 +47,6 @@ static BOOL waitingForAccess = NO;
 @property (nonatomic, retain) NSArray *attachmentImageViews;
 @property (nonatomic) UIStatusBarStyle previousStatusBarStyle;
 @property (nonatomic, assign) UIViewController *fromViewController;
-@property (nonatomic, retain) UIImageView *backgroundImageView;
-@property (nonatomic, retain) DEFacebookGradientView *gradientView;
 @property (nonatomic, retain) UIPickerView *accountPickerView;
 @property (nonatomic, retain) UIPopoverController *accountPickerPopoverController;
 
@@ -92,8 +91,6 @@ static BOOL waitingForAccess = NO;
 @synthesize attachmentImageViews = _attachmentImageViews;
 @synthesize previousStatusBarStyle = _previousStatusBarStyle;
 @synthesize fromViewController = _fromViewController;
-@synthesize backgroundImageView = _backgroundImageView;
-@synthesize gradientView = _gradientView;
 @synthesize accountPickerView = _accountPickerView;
 @synthesize accountPickerPopoverController = _accountPickerPopoverController;
 
@@ -188,8 +185,6 @@ enum {
     [_urls release], _urls = nil;
     [_attachmentFrameViews release], _attachmentFrameViews = nil;
     [_attachmentImageViews release], _attachmentImageViews = nil;
-    [_backgroundImageView release], _backgroundImageView = nil;
-    [_gradientView release], _gradientView = nil;
     [_accountPickerView release], _accountPickerView = nil;
     [_accountPickerPopoverController release], _accountPickerPopoverController = nil;
     
@@ -212,7 +207,7 @@ enum {
     self.textViewContainer.backgroundColor = [UIColor clearColor];
     self.textView.backgroundColor = [UIColor clearColor];
     
-    
+    self.view.bounds = [[[UIApplication sharedApplication] keyWindow] bounds];
     
     if ([UIDevice de_isIOS5]) {
         self.fromViewController = self.presentingViewController;
@@ -268,50 +263,16 @@ enum {
 {
     [super viewWillAppear:animated];
     
-    // grab an image of our parent view
-    UIView *parentView = self.fromViewController.view;
-    
-    // For iOS 5 you need to use presentingViewController:
-    // UIView *parentView = self.presentingViewController.view;
-    
-    UIGraphicsBeginImageContext(parentView.bounds.size);
-    [parentView.layer renderInContext:UIGraphicsGetCurrentContext()];
-    UIImage *parentViewImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    // insert an image view with a picture of the parent view at the back of our view's subview stack...
-    self.backgroundImageView = [[[UIImageView alloc] initWithFrame:self.view.bounds] autorelease];
-    self.backgroundImageView.image = parentViewImage;
-    [self.view insertSubview:self.backgroundImageView atIndex:0];
-
-    
-        // Now let's fade in a gradient view over the presenting view.
-    self.gradientView = [[[DEFacebookGradientView alloc] initWithFrame:[UIApplication sharedApplication].keyWindow.bounds] autorelease];
-    self.gradientView.autoresizingMask = UIViewAutoresizingNone;
-    self.gradientView.transform = self.fromViewController.view.transform;
-    self.gradientView.alpha = 0.0f;
-    self.gradientView.center = [UIApplication sharedApplication].keyWindow.center;
-    [self.fromViewController.view addSubview:self.gradientView];
-    [UIView animateWithDuration:0.3f
-                     animations:^ {
-                         self.gradientView.alpha = 1.0f;
-                     }];    
-    
     self.previousStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
     [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque animated:YES]; 
     
     [self updateFramesForOrientation:self.interfaceOrientation];
-    
 }
 
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-    
-    self.backgroundImageView.alpha = 1.0f;
-    //self.backgroundImageView.frame = [self.view convertRect:self.backgroundImageView.frame fromView:[UIApplication sharedApplication].keyWindow];
-    [self.view insertSubview:self.gradientView aboveSubview:self.backgroundImageView];
     
     CAShapeLayer *maskLayer = [CAShapeLayer layer];
     UIBezierPath *roundedPath = [UIBezierPath bezierPathWithRoundedRect:self.navImage.bounds
@@ -329,21 +290,7 @@ enum {
 - (void)viewWillDisappear:(BOOL)animated
 {
     [super viewWillDisappear:animated];
-    
-    UIView *presentingView = [UIDevice de_isIOS5] ? self.fromViewController.view : self.parentController.view;
-    [presentingView addSubview:self.gradientView];
-    
-    [self.backgroundImageView removeFromSuperview];
-    self.backgroundImageView = nil;
-    
-    [UIView animateWithDuration:0.3f
-                     animations:^ {
-                         self.gradientView.alpha = 0.0f;
-                     }
-                     completion:^(BOOL finished) {
-                         [self.gradientView removeFromSuperview];
-                     }];
-    
+    UIView *presentingView = [UIDevice de_isIOS5] ? self.fromViewController.view : self.parentController.view;    
     [[UIApplication sharedApplication] setStatusBarStyle:self.previousStatusBarStyle animated:YES];
 }
 
@@ -365,14 +312,6 @@ enum {
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
 {
     [self updateFramesForOrientation:interfaceOrientation];
-
-    // Our fake background won't rotate properly. Just hide it.
-    if (interfaceOrientation == self.presentedViewController.interfaceOrientation) {
-        self.backgroundImageView.alpha = 1.0f;
-    }
-    else {
-        self.backgroundImageView.alpha = 0.0f;
-    }
 }
 
 
@@ -414,7 +353,6 @@ enum {
         // Private
     self.attachmentFrameViews = nil;
     self.attachmentImageViews = nil;
-    self.gradientView = nil;
     self.accountPickerView = nil;
     self.accountPickerPopoverController = nil;
     
@@ -540,6 +478,8 @@ enum {
     
     CGFloat cardLeft = trunc((CGRectGetWidth(self.view.bounds) - cardWidth) / 2);
     self.cardView.frame = CGRectMake(cardLeft, cardTop, cardWidth, cardHeight);
+    self.view.frame = self.cardView.frame;
+    self.cardView.frame = CGRectMake(0, 0, self.view.width, self.view.height);
     
     self.navImage.frame = CGRectMake(0, 0, cardWidth, 44);
     
@@ -566,6 +506,7 @@ enum {
     self.textView.frame = CGRectMake(0.0f, 6.0f, textWidth, self.textViewContainer.frame.size.height-6);
     self.textView.scrollIndicatorInsets = UIEdgeInsetsMake(0.0f, 0.0f, 0.0f, -(self.cardView.bounds.size.width - textWidth - 1.0f));
     
+    
     self.paperClipView.frame = CGRectMake(CGRectGetMaxX(self.cardView.frame) - self.paperClipView.frame.size.width + 6.0f,
                                           CGRectGetMinY(self.cardView.frame) + CGRectGetMaxY(self.cardHeaderLineView.frame) - 1.0f,
                                           self.paperClipView.frame.size.width,
@@ -574,7 +515,7 @@ enum {
         // We need to position the rotated views by their center, not their frame.
         // This isn't elegant, but it is correct. Half-points are required because
         // some frame sizes aren't evenly divisible by 2.
-    self.attachment1FrameView.center = CGPointMake(self.cardView.bounds.size.width - 45.0f, CGRectGetMaxY(self.paperClipView.frame) - cardTop + 18.0f);
+    self.attachment1FrameView.center = CGPointMake(self.cardView.bounds.size.width - 45.0f, CGRectGetMaxY(self.paperClipView.frame) + 18.0f);
     self.attachment1ImageView.center = CGPointMake(self.cardView.bounds.size.width - 45.5, self.attachment1FrameView.center.y - 2.0f);
     
     self.attachment2FrameView.center = CGPointMake(self.attachment1FrameView.center.x - 4.0f, self.attachment1FrameView.center.y + 5.0f);
@@ -582,8 +523,6 @@ enum {
     
     self.attachment3FrameView.center = CGPointMake(self.attachment2FrameView.center.x - 4.0f, self.attachment2FrameView.center.y + 5.0f);
     self.attachment3ImageView.center = CGPointMake(self.attachment2ImageView.center.x - 4.0f, self.attachment2ImageView.center.y + 5.0f);
-    
-    self.gradientView.frame = self.gradientView.superview.bounds;
     
     [FBSession openActiveSessionWithAllowLoginUI:NO];
     
@@ -760,7 +699,7 @@ enum {
                 self.completionHandler(DEFacebookComposeViewControllerResultDone);
             }
             else {
-                [self dismissModalViewControllerAnimated:YES];
+                [self.fromViewController dismissPopupViewController:self];
             }
 
             NSLog(@"   ok");
@@ -774,11 +713,12 @@ enum {
 
 - (IBAction)cancel
 {
+    DDLogVerbose(@"cancel");
     if (self.completionHandler) {
         self.completionHandler(DEFacebookComposeViewControllerResultCancelled);
     }
     else {
-        [self dismissModalViewControllerAnimated:YES];
+        [self.fromViewController dismissPopupViewController:self];
     }
 }
 
@@ -796,7 +736,7 @@ enum {
     // This gets called if there's an error sending the tweet.
 {
     if (alertView.tag == DEFacebookComposeViewControllerNoAccountsAlert) {
-        [self dismissModalViewControllerAnimated:YES];
+        [self.fromViewController dismissPopupViewController:self];
     }
     else if (alertView.tag == DEFacebookComposeViewControllerCannotSendAlert) {
         if (buttonIndex == 1) {
