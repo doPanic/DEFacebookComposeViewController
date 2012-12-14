@@ -479,7 +479,7 @@ enum {
     CGFloat cardLeft = trunc((CGRectGetWidth(self.view.bounds) - cardWidth) / 2);
     self.cardView.frame = CGRectMake(cardLeft, cardTop, cardWidth, cardHeight);
     self.view.frame = self.cardView.frame;
-    self.cardView.frame = CGRectMake(0, 0, self.view.width, self.view.height);
+    self.cardView.frame = CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height);
     
     self.navImage.frame = CGRectMake(0, 0, cardWidth, 44);
     
