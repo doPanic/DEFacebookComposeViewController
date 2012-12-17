@@ -32,6 +32,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <FacebookSDK/FacebookSDK.h>
 #import "UIViewController+MJPopupViewController.h"
+#import "PAKFBSecureSession.h"
 
 #import <Social/Social.h>
 
@@ -526,9 +527,9 @@ enum {
     self.attachment3FrameView.center = CGPointMake(self.attachment2FrameView.center.x - 4.0f, self.attachment2FrameView.center.y + 5.0f);
     self.attachment3ImageView.center = CGPointMake(self.attachment2ImageView.center.x - 4.0f, self.attachment2ImageView.center.y + 5.0f);
     
-    [FBSession openActiveSessionWithAllowLoginUI:NO];
+    [PAKFBSecureSession openActiveSessionWithAllowLoginUI:NO];
     
-    if (![FBSession.activeSession isOpen]) {
+    if (![PAKFBSecureSession.activeSession isOpen]) {
         [self setSendButtonTitle:NSLocalizedString(@"Log in",@"")];
     }
     [self.navImage setNeedsDisplay];
@@ -599,9 +600,10 @@ enum {
 - (IBAction)send
 {
     
-    if (![FBSession.activeSession isOpen]) {
+    if (![PAKFBSecureSession.activeSession isOpen]) {
+        DDLogVerbose(@"![PAKFBSecureSession.activeSession isOpen]");
         
-        [FBSession openActiveSessionWithPublishPermissions:[NSArray arrayWithObjects:@"publish_stream", nil]
+        [PAKFBSecureSession openActiveSessionWithPublishPermissions:[NSArray arrayWithObjects:@"publish_stream", nil]
                                            defaultAudience:FBSessionDefaultAudienceEveryone
                                               allowLoginUI:YES
 
@@ -612,7 +614,7 @@ enum {
                                       if (error) {
                                           NSLog(@"error");
                                       } else {
-                                          [FBSession setActiveSession:session];
+                                          [PAKFBSecureSession setActiveSession:session];
                                           [self setSendButtonTitle:NSLocalizedString(@"Post",@"")];
                                       }
                                   }];
@@ -659,7 +661,7 @@ enum {
 
     // create the connection object
     FBRequestConnection *newConnection = [[[FBRequestConnection alloc] init] autorelease];
-    FBRequest *request = [[FBRequest alloc] initWithSession:FBSession.activeSession
+    FBRequest *request = [[FBRequest alloc] initWithSession:PAKFBSecureSession.activeSession
                                                   graphPath:graphPath
                                                  parameters:d
                                                  HTTPMethod:@"POST"];

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "DEFacebookComposeViewController"
-  s.version      = "1.0.5"
+  s.version      = "1.0.6"
   s.summary      = "The iOS 5 compatible Facebook Sheet."
   s.description  = <<-DESC
                       Facebook compose sheet view controller like in iOS 6.0.
@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = 'Public Domain'
   s.author       = "Sakrist"
   s.source       = { :git => "https://github.com/doPanic/DEFacebookComposeViewController.git",
-                     :tag => "1.0.5" }
+                     :tag => "1.0.6" }
   s.platform     = :ios, '5.0'
 
   s.source_files = 'FacebookComposeViewController'
@@ -21,5 +21,6 @@ Pod::Spec.new do |s|
 
   s.frameworks = 'Accounts'
   s.dependency 'Facebook-iOS-SDK', '~> 3.1'
+  s.dependency 'PanicAppKit', '~> 1.0'
   s.dependency 'MJPopupViewController', '~> 1.0'
 end
