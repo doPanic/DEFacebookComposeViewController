@@ -282,6 +282,8 @@ enum {
     maskLayer.path = [roundedPath CGPath];
     maskLayer.fillColor = [[UIColor whiteColor] CGColor];
     maskLayer.backgroundColor = [[UIColor clearColor] CGColor];
+    maskLayer.shouldRasterize = YES;
+    maskLayer.rasterizationScale = 2;
     self.navImage.layer.mask = maskLayer;
     [self.navImage setNeedsDisplay];
 }
@@ -713,12 +715,14 @@ enum {
 
 - (IBAction)cancel
 {
-    DDLogVerbose(@"cancel");
     if (self.completionHandler) {
+        DDLogVerbose(@"cancel: completionHandler");
         self.completionHandler(DEFacebookComposeViewControllerResultCancelled);
     }
     else {
-        [self.fromViewController dismissPopupViewController:self];
+        UIViewController *parent = self.fromViewController;
+        DDLogVerbose(@"cancel: dismissPopupViewController, parent=%@", parent);
+        [parent dismissPopupViewController:self];
     }
 }
 
