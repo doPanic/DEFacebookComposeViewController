@@ -416,7 +416,7 @@ enum {
 }
 
 
-- (BOOL)addURL:(NSString *)url
+- (BOOL)addURL:(NSURL *)url
 {
     [self.urls removeAllObjects];
     if (url == nil) {
@@ -599,7 +599,6 @@ enum {
 
 - (IBAction)send
 {
-    
     if (![PAKFBSecureSession.activeSession isOpen]) {
         DDLogVerbose(@"![PAKFBSecureSession.activeSession isOpen]");
         
@@ -622,7 +621,6 @@ enum {
         return;
     }
     
-    
     self.sendButton.enabled = NO;
         
     UIActivityIndicatorView *activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
@@ -643,7 +641,6 @@ enum {
     }
     
     NSString *graphPath = @"me/feed";
-    
     
     
     if ([self.urls count] > 0) {
